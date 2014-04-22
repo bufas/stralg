@@ -1,15 +1,14 @@
 package core;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class McCreight {
 
     public static char TERM_SYMBOL = '$';
+    private static boolean OUTPUT_DOT = true;
     private String input;
     private Node root;
     private PrintWriter dotOutput;
@@ -35,15 +34,17 @@ public class McCreight {
      * @return A node which matches the search, or null if the string is not in the tree
      */
     private Node slowscanNoCreate(Node start, String find) {
-        Node curNode = root;
-        int findCharCount = 0;
+        // Handle empty strings
+        if (find.equals("")) return start;
 
+        Node curNode = start;
+        int findCharCount = 0;
         while (true) {
             Edge e = curNode.getEdge(find.charAt(findCharCount));
-            if (e == null) return curNode;
+            if (e == null) return null;
             System.out.println("\tSearching edge " + e.getLabel(input) + " for " + find.substring(findCharCount));
             for (int i = 0; i < e.getLength(); i++) {
-                if (findCharCount == find.length()) {
+                if (findCharCount == find.length() - 1) {
                     return e.getTo();
                 } else if (input.charAt(e.getIdx() + i) != find.charAt(findCharCount)) {
                     return null;
@@ -60,11 +61,11 @@ public class McCreight {
 
         // If node is a leaf, return its index
         if (n.getAllEdges().isEmpty()) {
-            res.add(n.getIdx());
+            res.add(n.getIdx() + 1);
             return res;
         }
 
-        // Else recurse on all children
+        // Else, recurse on all children
         for (Edge e : n.getAllEdges()) {
             res.addAll(listAllIndicesOfSubtree(e.getTo()));
         }
@@ -143,11 +144,6 @@ public class McCreight {
                     NodeAndNewFlag nanf = fastscan(root, v.substring(1));
                     w = nanf.n;
                     wIsNew = nanf.isNew;
-                    // TODO wrong
-//                    w = new Node(i + 1, u.getLength() + v.length());
-////                    makeEdge(u.getSuffixLink(), w, w.getIdx() - (w.getLength() - u.getSuffixLink().getLength()), v.length() - (i + 1) - 1);
-//                    makeEdge(u.getSuffixLink(), w, w.getIdx(), v.length() - (i + 1) - 1);
-//                    wIsNew = true;
                 }
             }
 
@@ -271,10 +267,11 @@ public class McCreight {
     }
 
     private void makeDot(int iteration) {
-            // Run through the tree
-            printSubtreeNodes(root, dotOutput, iteration);
-            dotOutput.println("");
-            printSubtreeEdges(root, dotOutput, iteration);
+        if (!OUTPUT_DOT) return;
+        // Run through the tree
+        printSubtreeNodes(root, dotOutput, iteration);
+        dotOutput.println("");
+        printSubtreeEdges(root, dotOutput, iteration);
     }
 
     private void printSubtreeNodes(Node n, PrintWriter w, int iteration) {
@@ -302,14 +299,23 @@ public class McCreight {
         }
     }
 
-    public static void main(String[] args) {
-        McCreight mc = new McCreight("mississippi");
-//        List<Integer> search = mc.search("ss");
-//
-//        System.out.print("The search returned:");
-//        for (int i : search) {
-//            System.out.print(" " + i);
-//        }
-//        System.out.println();
+    public static void main(String[] args) throws IOException {
+        if (args.length != 2) {
+            System.out.println("Please call this program with a file and a search string.");
+            System.out.println("Ex. java core.McCreight.java file.txt xx");
+        }
+
+        String input = new Scanner(new File(args[0])).useDelimiter("\\Z").next();
+
+        McCreight mc = new McCreight(input);
+        List<Integer> search = mc.search(args[1]);
+
+        System.out.println();
+        System.out.println();
+        System.out.print("The search returned:");
+        for (int i : search) {
+            System.out.print(" " + i);
+        }
+        System.out.println();
     }
 }
