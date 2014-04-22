@@ -31,9 +31,7 @@ public class Node {
     public int getIdx() { return idx; }
 
     public String getLabel(String str) {
-        String label = str.substring(idx, idx + length);
-        if (edges.isEmpty()) label += "$";
-        return label;
+        return str.substring(idx, idx + length);
     }
 
     public String toString(String str) {

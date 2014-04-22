@@ -25,8 +25,6 @@ public class Edge {
     public void setLength(int l) { length = l; }
 
     public String getLabel(String str) {
-        String label = str.substring(idx, idx + length);
-        if (to.getAllEdges().isEmpty()) label += "$";
-        return label;
+        return str.substring(idx, idx + length);
     }
 }

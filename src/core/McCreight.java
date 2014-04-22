@@ -5,18 +5,18 @@ import java.io.PrintWriter;
 
 public class McCreight {
 
+    public static char TERM_SYMBOL = '$';
     private String input;
     private Node root;
 
     public McCreight(String input) {
-        this.input = input;
+        this.input = input + TERM_SYMBOL;
         constructSuffixTree();
     }
 
     public Edge makeEdge(Node n1, Node n2, int idx, int length) {
         Edge e = new Edge(n1, n2, idx, length);
-        if (length == 0) n1.addEdge('$', e);
-        else n1.addEdge(input.charAt(idx), e);
+        n1.addEdge(input.charAt(idx), e);
         n2.setParentEdge(e);
         return e;
     }
@@ -35,9 +35,8 @@ public class McCreight {
         String tail = input;
         for (int i = 0; i < input.length() - 1; i++) {
             makeDot();
-//            System.out.println("Making node " + (i + 2) + " (" + input.substring(i + 1) + ") with head=" + head.getLabel(input) + " and tail=" + tail);
 
-            System.out.println("-- STARTING ITERATION "+(i+1)+" --");
+            System.out.println("-- BUILDING TREE( "+(i+2)+" ) --");
             System.out.println("\tstring  = " + input.substring(i+1));
             System.out.println("\thead("+(i+1)+") = " + head.toString(input));
             System.out.println("\ttail("+(i+1)+") = " + tail + "$");
@@ -50,7 +49,7 @@ public class McCreight {
                 u = root;
                 v = "";
             } else {
-                System.out.println(2);
+//                System.out.println(2);
                 Edge pe = head.getParentEdge();
                 u = pe.getFrom();
                 v = input.substring(pe.getIdx(), pe.getIdx() + pe.getLength());
@@ -62,17 +61,17 @@ public class McCreight {
             Node w;
             boolean wIsNew;
             if (u != root) {
-                System.out.println(3);
+//                System.out.println(3);
                 NodeAndNewFlag nanf = fastscan(u.getSuffixLink(), v);
                 w = nanf.n;
                 wIsNew = nanf.isNew;
             } else {
                 if (v.length() < 2) {
-                    System.out.println(5);
+//                    System.out.println(5);
                     w = u;
                     wIsNew = false;
                 } else {
-                    System.out.println(6);
+//                    System.out.println(6);
                     // TODO wrong
                     w = new Node(i + 1, u.getLength() + v.length());
                     makeEdge(u.getSuffixLink(), w, w.getIdx() - (w.getLength() - u.getSuffixLink().getLength()), v.length() - (i + 1) - 1);
@@ -82,15 +81,15 @@ public class McCreight {
 
             Node newHead;
             if (wIsNew) {
-                System.out.println(6);
+//                System.out.println(7);
                 newHead = w;
             } else {
                 if (v.isEmpty()) {
-                    System.out.println(8);
+//                    System.out.println(8);
                     // Special case not covered in the book pseudocode
                     newHead = slowscan(w, input.substring(i + 1)); // TODO last parameter might be too long
                 } else {
-                    System.out.println(9);
+//                    System.out.println(9);
                     newHead = slowscan(w, tail);
                 }
             }
@@ -110,10 +109,6 @@ public class McCreight {
 
         // Set the last suffix link
         head.setSuffixLink(root);
-
-        // Add the empty string
-        Node emptyNode = new Node(0,0);
-        makeEdge(root, emptyNode, 0, 0);
 
         makeDot();
     }
@@ -228,7 +223,7 @@ public class McCreight {
         String shape = "ellipse";
 
         if (n.getAllEdges().isEmpty()) {
-            label = input.length() - n.getLabel(input).length() + 2 + "";
+            label = input.length() - n.getLabel(input).length() + 1 + "";
             shape = "ellipse";
         }
 
