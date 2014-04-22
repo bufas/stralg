@@ -14,6 +14,15 @@ public class Node {
 
     public Node(int idx, int length) {
 //        System.out.println("Creating node with idx="+idx+" and length="+length);
+
+        try {
+            if (idx < 0 || length < 0) throw new Exception();
+        } catch (Exception e) {
+            System.err.println("Attempt to create node with negative length (idx="+idx+" & length="+length+")");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
         this.parentEdge = null;
         this.idx = idx;
         this.length = length;
@@ -29,6 +38,7 @@ public class Node {
     public void setSuffixLink(Node n) { suffixLink = n; }
     public int getLength() { return length; }
     public int getIdx() { return idx; }
+    public Node getParent() { return parentEdge.getFrom(); }
 
     public String getLabel(String str) {
         return str.substring(idx, idx + length);

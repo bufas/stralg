@@ -1,5 +1,7 @@
 package core;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -10,10 +12,21 @@ public class McCreight {
     public static char TERM_SYMBOL = '$';
     private String input;
     private Node root;
+    private PrintWriter dotOutput;
 
     public McCreight(String input) {
         this.input = input + TERM_SYMBOL;
-        constructSuffixTree();
+
+        try {
+            dotOutput = new PrintWriter(new BufferedWriter(new FileWriter("suffixtree.dot")));
+            dotOutput.println("digraph suffixtree {");
+
+            constructSuffixTree();
+
+            dotOutput.println("}");
+            dotOutput.close();
+        } catch (IOException e) { e.printStackTrace(); }
+
     }
 
     /**
@@ -90,12 +103,12 @@ public class McCreight {
         Node head = root;
         String tail = input;
         for (int i = 0; i < input.length() - 1; i++) {
-            makeDot();
+            makeDot(i);
 
-            System.out.println("-- BUILDING TREE( "+(i+2)+" ) --");
+            System.out.println("-- INSERTING NODE "+(i+2)+" --");
             System.out.println("\tstring  = " + input.substring(i+1));
             System.out.println("\thead("+(i+1)+") = " + head.toString(input));
-            System.out.println("\ttail("+(i+1)+") = " + tail + "$");
+            System.out.println("\ttail("+(i+1)+") = " + tail);
 
             Node u;
             String v;
@@ -106,9 +119,8 @@ public class McCreight {
                 v = "";
             } else {
 //                System.out.println(2);
-                Edge pe = head.getParentEdge();
-                u = pe.getFrom();
-                v = input.substring(pe.getIdx(), pe.getIdx() + pe.getLength());
+                u = head.getParent();
+                v = head.getParentEdge().getLabel(input);
             }
 
             System.out.println("\tu       = " + u.toString(input));
@@ -127,11 +139,15 @@ public class McCreight {
                     w = u;
                     wIsNew = false;
                 } else {
-//                    System.out.println(6);
+                    System.out.println(6);
+                    NodeAndNewFlag nanf = fastscan(root, v.substring(1));
+                    w = nanf.n;
+                    wIsNew = nanf.isNew;
                     // TODO wrong
-                    w = new Node(i + 1, u.getLength() + v.length());
-                    makeEdge(u.getSuffixLink(), w, w.getIdx() - (w.getLength() - u.getSuffixLink().getLength()), v.length() - (i + 1) - 1);
-                    wIsNew = true;
+//                    w = new Node(i + 1, u.getLength() + v.length());
+////                    makeEdge(u.getSuffixLink(), w, w.getIdx() - (w.getLength() - u.getSuffixLink().getLength()), v.length() - (i + 1) - 1);
+//                    makeEdge(u.getSuffixLink(), w, w.getIdx(), v.length() - (i + 1) - 1);
+//                    wIsNew = true;
                 }
             }
 
@@ -166,14 +182,14 @@ public class McCreight {
         // Set the last suffix link
         head.setSuffixLink(root);
 
-        makeDot();
+        makeDot(input.length());
     }
 
     /**
      * We know that the string find is in the tree.
      */
     private NodeAndNewFlag fastscan(Node start, String find) {
-        System.out.println("Fastscanning all the way!");
+        System.out.println("Fastscanning from '"+start.getLabel(input)+"' for '"+find+"'");
         // core.Edge case (search for the empty string)
         if (find.equals("")) return new NodeAndNewFlag(start, false);
 
@@ -182,7 +198,7 @@ public class McCreight {
         Node curNode = start;
         Edge e;
         do {
-            e = curNode.getEdge(find.charAt(0));
+            e = curNode.getEdge(find.charAt(searchDist));
             searchDist += e.getLength();
             curNode = e.getTo();
         } while (find.length() > searchDist);
@@ -254,26 +270,14 @@ public class McCreight {
         }
     }
 
-    private void makeDot() {
-        try {
-            PrintWriter writer = new PrintWriter("suffixtree.dot");
-            writer.println("digraph suffixtree {");
-
+    private void makeDot(int iteration) {
             // Run through the tree
-            printSubtreeNodes(root, writer);
-            writer.println("");
-            printSubtreeEdges(root, writer);
-
-            writer.println("}");
-            writer.close();
-
-            System.in.read(); // Wait for user input in order to inspect the tree
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            printSubtreeNodes(root, dotOutput, iteration);
+            dotOutput.println("");
+            printSubtreeEdges(root, dotOutput, iteration);
     }
 
-    private void printSubtreeNodes(Node n, PrintWriter w) {
+    private void printSubtreeNodes(Node n, PrintWriter w, int iteration) {
         // Print a label (index i) on terminal nodes
         String label = n.getLabel(input);
         String shape = "ellipse";
@@ -283,21 +287,29 @@ public class McCreight {
             shape = "ellipse";
         }
 
-        w.println("\t\"_" + n.getLabel(input) + "\" [label=\""+label+"\", shape=\""+shape+"\"]");
+        w.println("\t\"_["+iteration+"]_" + n.getLabel(input) + "\" [label=\""+label+"\", shape=\""+shape+"\"]");
 
         for (Edge e : n.getAllEdges()) {
-            printSubtreeNodes(e.getTo(), w);
+            printSubtreeNodes(e.getTo(), w, iteration);
         }
     }
 
-    private void printSubtreeEdges(Node n, PrintWriter w) {
+    private void printSubtreeEdges(Node n, PrintWriter w, int iteration) {
+//        if (n.getSuffixLink() != null) w.println("\t\"_["+iteration+"]_" + n.getLabel(input) + "\" -> \"_["+iteration+"]_" + n.getSuffixLink().getLabel(input) + "\" [weight=0, color=\"blue\"]");
         for (Edge e : n.getAllEdges()) {
-            w.println("\t\"_" + e.getFrom().getLabel(input) + "\" -> \"_" + e.getTo().getLabel(input) + "\" [label=\" "+ e.getLabel(input) +"\"]");
-            printSubtreeEdges(e.getTo(), w);
+            w.println("\t\"_["+iteration+"]_" + n.getLabel(input) + "\" -> \"_["+iteration+"]_" + e.getTo().getLabel(input) + "\" [label=\" "+ e.getLabel(input) +"\"]");
+            printSubtreeEdges(e.getTo(), w, iteration);
         }
     }
 
     public static void main(String[] args) {
-        new McCreight("abaab");
+        McCreight mc = new McCreight("mississippi");
+//        List<Integer> search = mc.search("ss");
+//
+//        System.out.print("The search returned:");
+//        for (int i : search) {
+//            System.out.print(" " + i);
+//        }
+//        System.out.println();
     }
 }

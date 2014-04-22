@@ -8,6 +8,15 @@ public class Edge {
     private int length;
 
     public Edge(Node from, Node to, int idx, int length) {
+
+        try {
+            if (idx < 0 || length < 0) throw new Exception();
+        } catch (Exception e) {
+            System.err.println("Attempt to create edge with negative length (idx="+idx+" & length="+length+")");
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
         this.from   = from;
         this.to     = to;
         this.idx    = idx;
