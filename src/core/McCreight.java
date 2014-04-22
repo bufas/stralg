@@ -2,13 +2,14 @@ package core;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 
 public class McCreight {
 
     public static char TERM_SYMBOL = '$';
-    private static boolean OUTPUT_DOT = true;
+    private static boolean OUTPUT_DOT = false;
     private String input;
     private Node root;
     private PrintWriter dotOutput;
@@ -42,7 +43,7 @@ public class McCreight {
         while (true) {
             Edge e = curNode.getEdge(find.charAt(findCharCount));
             if (e == null) return null;
-            System.out.println("\tSearching edge " + e.getLabel(input) + " for " + find.substring(findCharCount));
+//            System.out.println("\tSearching edge " + e.getLabel(input) + " for " + find.substring(findCharCount));
             for (int i = 0; i < e.getLength(); i++) {
                 if (findCharCount == find.length() - 1) {
                     return e.getTo();
@@ -98,7 +99,7 @@ public class McCreight {
         makeEdge(root, n1, 0, input.length());
         root.setSuffixLink(root);
 
-        System.out.println("T_1 created!");
+//        System.out.println("T_1 created!");
 
         // Construct T_{i+1}
         Node head = root;
@@ -106,10 +107,10 @@ public class McCreight {
         for (int i = 0; i < input.length() - 1; i++) {
             makeDot(i);
 
-            System.out.println("-- INSERTING NODE "+(i+2)+" --");
-            System.out.println("\tstring  = " + input.substring(i+1));
-            System.out.println("\thead("+(i+1)+") = " + head.toString(input));
-            System.out.println("\ttail("+(i+1)+") = " + tail);
+//            System.out.println("-- INSERTING NODE "+(i+2)+" --");
+//            System.out.println("\tstring  = " + input.substring(i+1));
+//            System.out.println("\thead("+(i+1)+") = " + head.toString(input));
+//            System.out.println("\ttail("+(i+1)+") = " + tail);
 
             Node u;
             String v;
@@ -124,8 +125,8 @@ public class McCreight {
                 v = head.getParentEdge().getLabel(input);
             }
 
-            System.out.println("\tu       = " + u.toString(input));
-            System.out.println("\tv       = " + v);
+//            System.out.println("\tu       = " + u.toString(input));
+//            System.out.println("\tv       = " + v);
 
             Node w;
             boolean wIsNew;
@@ -140,7 +141,7 @@ public class McCreight {
                     w = u;
                     wIsNew = false;
                 } else {
-                    System.out.println(6);
+//                    System.out.println(6);
                     NodeAndNewFlag nanf = fastscan(root, v.substring(1));
                     w = nanf.n;
                     wIsNew = nanf.isNew;
@@ -185,7 +186,7 @@ public class McCreight {
      * We know that the string find is in the tree.
      */
     private NodeAndNewFlag fastscan(Node start, String find) {
-        System.out.println("Fastscanning from '"+start.getLabel(input)+"' for '"+find+"'");
+//        System.out.println("Fastscanning from '"+start.getLabel(input)+"' for '"+find+"'");
         // core.Edge case (search for the empty string)
         if (find.equals("")) return new NodeAndNewFlag(start, false);
 
@@ -212,7 +213,7 @@ public class McCreight {
      * We do not know if the string find is in the tree or not.
      */
     private Node slowscan(Node start, String find) {
-        System.out.println("slowscanning from " + start.getLabel(input) + " for string " + find);
+//        System.out.println("slowscanning from " + start.getLabel(input) + " for string " + find);
 
         Node curNode = start;
         int findCharCount = 0;
@@ -220,7 +221,7 @@ public class McCreight {
         while (true) {
             Edge e = curNode.getEdge(find.charAt(findCharCount));
             if (e == null) return curNode;
-            System.out.println("\tSearching edge " + e.getLabel(input) + " for " + find.substring(findCharCount));
+//            System.out.println("\tSearching edge " + e.getLabel(input) + " for " + find.substring(findCharCount));
             for (int i = 0; i < e.getLength(); i++) {
                 if (findCharCount == find.length() || input.charAt(e.getIdx() + i) != find.charAt(findCharCount)) {
                     // Break this edge
@@ -237,7 +238,7 @@ public class McCreight {
         Node n1 = e.getFrom();
         Node n3 = e.getTo();
         Node n2 = new Node(e.getIdx() - n1.getLength(), n1.getLength() + offset);
-        System.out.print("Splitting edge " + e.getLabel(input) + " at offset "+offset+" into ");
+//        System.out.print("Splitting edge " + e.getLabel(input) + " at offset "+offset+" into ");
 
         // Insert new edge between n2 and n3
         Edge newEdge = makeEdge(n2, n3, e.getIdx() + offset, e.getLength() - offset);
@@ -247,7 +248,7 @@ public class McCreight {
         e.setTo(n2);
         e.setLength(offset);
 
-        System.out.println(e.getLabel(input) + " and " + newEdge.getLabel(input));
+//        System.out.println(e.getLabel(input) + " and " + newEdge.getLabel(input));
 
         // Return newly created node
         return n2;
@@ -303,15 +304,23 @@ public class McCreight {
         if (args.length != 2) {
             System.out.println("Please call this program with a file and a search string.");
             System.out.println("Ex. java core.McCreight.java file.txt xx");
+            return;
         }
 
-        String input = new Scanner(new File(args[0])).useDelimiter("\\Z").next();
+//        String input = new Scanner(new File(args[0])).useDelimiter("\\Z").next();
+        StringBuilder input = new StringBuilder();
+        BufferedReader br = new BufferedReader(new FileReader(args[0]));
 
-        McCreight mc = new McCreight(input);
+        int c;
+        while ((c = br.read()) != -1) input.append((char) c);
+
+        McCreight mc = new McCreight(input.toString());
         List<Integer> search = mc.search(args[1]);
+        Collections.sort(search);
 
         System.out.println();
         System.out.println();
+        System.out.println("The input is of length " + input.toString().length());
         System.out.print("The search returned:");
         for (int i : search) {
             System.out.print(" " + i);
