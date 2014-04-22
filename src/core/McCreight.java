@@ -2,6 +2,8 @@ package core;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class McCreight {
 
@@ -14,7 +16,61 @@ public class McCreight {
         constructSuffixTree();
     }
 
-    public Edge makeEdge(Node n1, Node n2, int idx, int length) {
+    /**
+     * This is the same as slowscan, but it does not create a new node
+     * it just returns the next if it ends on an edge
+     * @return A node which matches the search, or null if the string is not in the tree
+     */
+    private Node slowscanNoCreate(Node start, String find) {
+        Node curNode = root;
+        int findCharCount = 0;
+
+        while (true) {
+            Edge e = curNode.getEdge(find.charAt(findCharCount));
+            if (e == null) return curNode;
+            System.out.println("\tSearching edge " + e.getLabel(input) + " for " + find.substring(findCharCount));
+            for (int i = 0; i < e.getLength(); i++) {
+                if (findCharCount == find.length()) {
+                    return e.getTo();
+                } else if (input.charAt(e.getIdx() + i) != find.charAt(findCharCount)) {
+                    return null;
+                }
+                findCharCount++;
+            }
+
+            curNode = e.getTo();
+        }
+    }
+
+    private List<Integer> listAllIndicesOfSubtree(Node n) {
+        List<Integer> res = new ArrayList<Integer>();
+
+        // If node is a leaf, return its index
+        if (n.getAllEdges().isEmpty()) {
+            res.add(n.getIdx());
+            return res;
+        }
+
+        // Else recurse on all children
+        for (Edge e : n.getAllEdges()) {
+            res.addAll(listAllIndicesOfSubtree(e.getTo()));
+        }
+
+        return res;
+    }
+
+    public List<Integer> search(String query) {
+        // Serach as far down the tree as possible
+        Node top = slowscanNoCreate(root, query);
+
+        // The string was not found
+        if (top == null) return new ArrayList<Integer>();
+
+        // List the start index of all terminal nodes in the subtree rooted at top
+        return listAllIndicesOfSubtree(top);
+    }
+
+    private Edge makeEdge(Node n1, Node n2, int idx, int length) {
         Edge e = new Edge(n1, n2, idx, length);
         n1.addEdge(input.charAt(idx), e);
         n2.setParentEdge(e);
