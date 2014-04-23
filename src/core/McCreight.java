@@ -10,6 +10,7 @@ public class McCreight {
 
     public static char TERM_SYMBOL = '$';
     private static boolean OUTPUT_DOT = false;
+
     private String input;
     private Node root;
     private PrintWriter dotOutput;
@@ -43,7 +44,6 @@ public class McCreight {
         while (true) {
             Edge e = curNode.getEdge(find.charAt(findCharCount));
             if (e == null) return null;
-//            System.out.println("\tSearching edge " + e.getLabel(input) + " for " + find.substring(findCharCount));
             for (int i = 0; i < e.getLength(); i++) {
                 if (findCharCount == find.length() - 1) {
                     return e.getTo();
@@ -99,49 +99,41 @@ public class McCreight {
         makeEdge(root, n1, 0, input.length());
         root.setSuffixLink(root);
 
-//        System.out.println("T_1 created!");
-
         // Construct T_{i+1}
         Node head = root;
         String tail = input;
         for (int i = 0; i < input.length() - 1; i++) {
             makeDot(i);
 
-//            System.out.println("-- INSERTING NODE "+(i+2)+" --");
-//            System.out.println("\tstring  = " + input.substring(i+1));
-//            System.out.println("\thead("+(i+1)+") = " + head.toString(input));
-//            System.out.println("\ttail("+(i+1)+") = " + tail);
-
             Node u;
             String v;
 
             if (head.getParentEdge() == null) {
-//                System.out.println(1);
                 u = root;
                 v = "";
             } else {
-//                System.out.println(2);
                 u = head.getParent();
                 v = head.getParentEdge().getLabel(input);
             }
 
+//            System.out.println("-- INSERTING NODE "+(i+2)+" --");
+//            System.out.println("\tstring  = " + input.substring(i+1));
+//            System.out.println("\thead("+(i+1)+") = " + head.toString(input));
+//            System.out.println("\ttail("+(i+1)+") = " + tail);
 //            System.out.println("\tu       = " + u.toString(input));
 //            System.out.println("\tv       = " + v);
 
             Node w;
             boolean wIsNew;
             if (u != root) {
-//                System.out.println(3);
                 NodeAndNewFlag nanf = fastscan(u.getSuffixLink(), v);
                 w = nanf.n;
                 wIsNew = nanf.isNew;
             } else {
                 if (v.length() < 2) {
-//                    System.out.println(5);
                     w = u;
                     wIsNew = false;
                 } else {
-//                    System.out.println(6);
                     NodeAndNewFlag nanf = fastscan(root, v.substring(1));
                     w = nanf.n;
                     wIsNew = nanf.isNew;
@@ -150,15 +142,12 @@ public class McCreight {
 
             Node newHead;
             if (wIsNew) {
-//                System.out.println(7);
                 newHead = w;
             } else {
                 if (v.isEmpty()) {
-//                    System.out.println(8);
                     // Special case not covered in the book pseudocode
-                    newHead = slowscan(w, input.substring(i + 1)); // TODO last parameter might be too long
+                    newHead = slowscan(w, input.substring(i + 1));
                 } else {
-//                    System.out.println(9);
                     newHead = slowscan(w, tail);
                 }
             }
@@ -186,8 +175,7 @@ public class McCreight {
      * We know that the string find is in the tree.
      */
     private NodeAndNewFlag fastscan(Node start, String find) {
-//        System.out.println("Fastscanning from '"+start.getLabel(input)+"' for '"+find+"'");
-        // core.Edge case (search for the empty string)
+        // Edge case (search for the empty string)
         if (find.equals("")) return new NodeAndNewFlag(start, false);
 
         // Regular case
@@ -213,15 +201,12 @@ public class McCreight {
      * We do not know if the string find is in the tree or not.
      */
     private Node slowscan(Node start, String find) {
-//        System.out.println("slowscanning from " + start.getLabel(input) + " for string " + find);
-
         Node curNode = start;
         int findCharCount = 0;
 
         while (true) {
             Edge e = curNode.getEdge(find.charAt(findCharCount));
             if (e == null) return curNode;
-//            System.out.println("\tSearching edge " + e.getLabel(input) + " for " + find.substring(findCharCount));
             for (int i = 0; i < e.getLength(); i++) {
                 if (findCharCount == find.length() || input.charAt(e.getIdx() + i) != find.charAt(findCharCount)) {
                     // Break this edge
@@ -238,17 +223,14 @@ public class McCreight {
         Node n1 = e.getFrom();
         Node n3 = e.getTo();
         Node n2 = new Node(e.getIdx() - n1.getLength(), n1.getLength() + offset);
-//        System.out.print("Splitting edge " + e.getLabel(input) + " at offset "+offset+" into ");
 
         // Insert new edge between n2 and n3
-        Edge newEdge = makeEdge(n2, n3, e.getIdx() + offset, e.getLength() - offset);
+        makeEdge(n2, n3, e.getIdx() + offset, e.getLength() - offset);
 
         // Shorten edge (from and idx does not change)
         n2.setParentEdge(e);
         e.setTo(n2);
         e.setLength(offset);
-
-//        System.out.println(e.getLabel(input) + " and " + newEdge.getLabel(input));
 
         // Return newly created node
         return n2;
@@ -307,10 +289,8 @@ public class McCreight {
             return;
         }
 
-//        String input = new Scanner(new File(args[0])).useDelimiter("\\Z").next();
         StringBuilder input = new StringBuilder();
         BufferedReader br = new BufferedReader(new FileReader(args[0]));
-
         int c;
         while ((c = br.read()) != -1) input.append((char) c);
 
