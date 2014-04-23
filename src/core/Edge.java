@@ -8,14 +8,7 @@ public class Edge {
     private int length;
 
     public Edge(Node from, Node to, int idx, int length) {
-
-        try {
-            if (idx < 0 || length < 0) throw new Exception();
-        } catch (Exception e) {
-            System.err.println("Attempt to create edge with negative length (idx="+idx+" & length="+length+")");
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        if (idx < 0 || length < 0) throw new IllegalArgumentException("Attempt to create edge with negative length (idx="+idx+" & length="+length+")");
 
         this.from   = from;
         this.to     = to;
@@ -33,7 +26,5 @@ public class Edge {
     public void setIdx(int i) { idx = i; }
     public void setLength(int l) { length = l; }
 
-    public String getLabel(String str) {
-        return str.substring(idx, idx + length);
-    }
+    public String getLabel(String str) { return str.substring(idx, idx + length); }
 }
