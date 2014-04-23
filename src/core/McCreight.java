@@ -1,33 +1,18 @@
 package core;
 
-import java.io.*;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Scanner;
 
 public class McCreight {
 
     public static char TERM_SYMBOL = '$';
-    private static boolean OUTPUT_DOT = false;
 
     private String input;
     private Node root;
-    private PrintWriter dotOutput;
 
     public McCreight(String input) {
         this.input = input + TERM_SYMBOL;
-
-        try {
-            dotOutput = new PrintWriter(new BufferedWriter(new FileWriter("suffixtree.dot")));
-            dotOutput.println("digraph suffixtree {");
-
-            constructSuffixTree();
-
-            dotOutput.println("}");
-            dotOutput.close();
-        } catch (IOException e) { e.printStackTrace(); }
-
+        constructSuffixTree();
     }
 
     /**
@@ -93,25 +78,23 @@ public class McCreight {
     }
 
     private void constructSuffixTree() {
-        // Construct T_0
+        // Construct T_1
         root = new Node(0, 0);
         Node n1 = new Node(0, input.length());
         makeEdge(root, n1, 0, input.length());
         root.setSuffixLink(root);
 
-        // Construct T_{i+1}
-        Node head = root;
+        // Construct T_{i+2}
+        Node head   = root;
         String tail = input;
         for (int i = 0; i < input.length() - 1; i++) {
-            makeDot(i);
 
-            Node u;
-            String v;
+            // Initialize u and v
+            Node u   = root;
+            String v = "";
 
-            if (head.getParentEdge() == null) {
-                u = root;
-                v = "";
-            } else {
+            // Change u and v if head is not root
+            if (head != root) {
                 u = head.getParent();
                 v = head.getParentEdge().getLabel(input);
             }
@@ -124,7 +107,7 @@ public class McCreight {
 //            System.out.println("\tv       = " + v);
 
             Node w;
-            boolean wIsNew;
+            boolean wIsNew; // Tells whether w is a new node (created in this iteration) or not
             if (u != root) {
                 NodeAndNewFlag nanf = fastscan(u.getSuffixLink(), v);
                 w = nanf.n;
@@ -141,16 +124,8 @@ public class McCreight {
             }
 
             Node newHead;
-            if (wIsNew) {
-                newHead = w;
-            } else {
-                if (v.isEmpty()) {
-                    // Special case not covered in the book pseudocode
-                    newHead = slowscan(w, input.substring(i + 1));
-                } else {
-                    newHead = slowscan(w, tail);
-                }
-            }
+            if (wIsNew) newHead = w;
+            else newHead = createNodeIfNecessary(slowscan(w, (v.isEmpty()) ? input.substring(i+1) : tail));
 
             // Add suffix link to old head
             head.setSuffixLink(w);
@@ -167,8 +142,11 @@ public class McCreight {
 
         // Set the last suffix link
         head.setSuffixLink(root);
+    }
 
-        makeDot(input.length());
+    private Node createNodeIfNecessary(NodeAndOffset nao) {
+        if (nao.offset == 0) return nao.node;
+        else return splitEdge(nao.node.getParentEdge(), nao.offset);
     }
 
     /**
@@ -200,17 +178,17 @@ public class McCreight {
     /**
      * We do not know if the string find is in the tree or not.
      */
-    private Node slowscan(Node start, String find) {
+    private NodeAndOffset slowscan(Node start, String find) {
         Node curNode = start;
         int findCharCount = 0;
 
         while (true) {
             Edge e = curNode.getEdge(find.charAt(findCharCount));
-            if (e == null) return curNode;
+            if (e == null) return new NodeAndOffset(curNode,0);
             for (int i = 0; i < e.getLength(); i++) {
                 if (findCharCount == find.length() || input.charAt(e.getIdx() + i) != find.charAt(findCharCount)) {
                     // Break this edge
-                    return splitEdge(e, i);
+                    return new NodeAndOffset(e.getTo(), i);
                 }
                 findCharCount++;
             }
@@ -219,6 +197,8 @@ public class McCreight {
     }
 
     private Node splitEdge(Edge e, int offset) {
+        if (offset <= 0 || offset >= e.getLength()) throw new IllegalArgumentException("Can't split edge "+e.getLabel(input)+" at offset "+offset);
+
         // Prepare nodes
         Node n1 = e.getFrom();
         Node n3 = e.getTo();
@@ -237,6 +217,18 @@ public class McCreight {
     }
 
     /**
+     * Private class to use as return value from slowscan.
+     */
+    private class NodeAndOffset {
+        public Node node;
+        public int offset;
+        public NodeAndOffset(Node n, int o) {
+            node = n;
+            offset = o;
+        }
+    }
+
+    /**
      * Private class to use as return value from fastscan.
      */
     private class NodeAndNewFlag {
@@ -249,62 +241,4 @@ public class McCreight {
         }
     }
 
-    private void makeDot(int iteration) {
-        if (!OUTPUT_DOT) return;
-        // Run through the tree
-        printSubtreeNodes(root, dotOutput, iteration);
-        dotOutput.println("");
-        printSubtreeEdges(root, dotOutput, iteration);
-    }
-
-    private void printSubtreeNodes(Node n, PrintWriter w, int iteration) {
-        // Print a label (index i) on terminal nodes
-        String label = n.getLabel(input);
-        String shape = "ellipse";
-
-        if (n.getAllEdges().isEmpty()) {
-            label = input.length() - n.getLabel(input).length() + 1 + "";
-            shape = "ellipse";
-        }
-
-        w.println("\t\"_["+iteration+"]_" + n.getLabel(input) + "\" [label=\""+label+"\", shape=\""+shape+"\"]");
-
-        for (Edge e : n.getAllEdges()) {
-            printSubtreeNodes(e.getTo(), w, iteration);
-        }
-    }
-
-    private void printSubtreeEdges(Node n, PrintWriter w, int iteration) {
-//        if (n.getSuffixLink() != null) w.println("\t\"_["+iteration+"]_" + n.getLabel(input) + "\" -> \"_["+iteration+"]_" + n.getSuffixLink().getLabel(input) + "\" [weight=0, color=\"blue\"]");
-        for (Edge e : n.getAllEdges()) {
-            w.println("\t\"_["+iteration+"]_" + n.getLabel(input) + "\" -> \"_["+iteration+"]_" + e.getTo().getLabel(input) + "\" [label=\" "+ e.getLabel(input) +"\"]");
-            printSubtreeEdges(e.getTo(), w, iteration);
-        }
-    }
-
-    public static void main(String[] args) throws IOException {
-        if (args.length != 2) {
-            System.out.println("Please call this program with a file and a search string.");
-            System.out.println("Ex. java core.McCreight.java file.txt xx");
-            return;
-        }
-
-        StringBuilder input = new StringBuilder();
-        BufferedReader br = new BufferedReader(new FileReader(args[0]));
-        int c;
-        while ((c = br.read()) != -1) input.append((char) c);
-
-        McCreight mc = new McCreight(input.toString());
-        List<Integer> search = mc.search(args[1]);
-        Collections.sort(search);
-
-        System.out.println();
-        System.out.println();
-        System.out.println("The input is of length " + input.toString().length());
-        System.out.print("The search returned:");
-        for (int i : search) {
-            System.out.print(" " + i);
-        }
-        System.out.println();
-    }
 }
