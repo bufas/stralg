@@ -15,31 +15,29 @@ public class McCreight {
         constructSuffixTree();
     }
 
+    private boolean checkPrefixMatch(String s1, String s2) {
+        for (int i= 0; i < Math.min(s1.length(), s2.length()); i++) {
+            if (s1.charAt(i) != s2.charAt(i)) return false;
+        }
+        return true;
+    }
+
     /**
      * This is the same as slowscan, but it does not create a new node
      * it just returns the next if it ends on an edge
      * @return A node which matches the search, or null if the string is not in the tree
      */
-    private Node slowscanNoCreate(Node start, String find) {
-        // Handle empty strings
-        if (find.equals("")) return start;
-
-        Node curNode = start;
+    private Node slowscanNoCreate(Node node, String find) {
         int findCharCount = 0;
-        while (true) {
-            Edge e = curNode.getEdge(find.charAt(findCharCount));
-            if (e == null) return null;
-            for (int i = 0; i < e.getLength(); i++) {
-                if (findCharCount == find.length() - 1) {
-                    return e.getTo();
-                } else if (input.charAt(e.getIdx() + i) != find.charAt(findCharCount)) {
-                    return null;
-                }
-                findCharCount++;
-            }
 
-            curNode = e.getTo();
+        while (findCharCount < find.length()) {
+            Edge e = node.getEdge(find.charAt(findCharCount));
+            if (e == null || !checkPrefixMatch(e.getLabel(input), find.substring(findCharCount))) return null;
+            findCharCount += e.getLength();
+            node = e.getTo();
         }
+
+        return node;
     }
 
     private List<Integer> listAllIndicesOfSubtree(Node n) {
@@ -70,13 +68,6 @@ public class McCreight {
         return listAllIndicesOfSubtree(top);
     }
 
-    private Edge makeEdge(Node n1, Node n2, int idx, int length) {
-        Edge e = new Edge(n1, n2, idx, length);
-        n1.addEdge(input.charAt(idx), e);
-        n2.setParentEdge(e);
-        return e;
-    }
-
     private void constructSuffixTree() {
         // Construct T_1
         root = new Node(0, 0);
@@ -98,13 +89,6 @@ public class McCreight {
                 u = head.getParent();
                 v = head.getParentEdge().getLabel(input);
             }
-
-//            System.out.println("-- INSERTING NODE "+(i+2)+" --");
-//            System.out.println("\tstring  = " + input.substring(i+1));
-//            System.out.println("\thead("+(i+1)+") = " + head.toString(input));
-//            System.out.println("\ttail("+(i+1)+") = " + tail);
-//            System.out.println("\tu       = " + u.toString(input));
-//            System.out.println("\tv       = " + v);
 
             Node w;
             boolean wIsNew; // Tells whether w is a new node (created in this iteration) or not
@@ -196,6 +180,13 @@ public class McCreight {
         }
     }
 
+    private Edge makeEdge(Node n1, Node n2, int idx, int length) {
+        Edge e = new Edge(n1, n2, idx, length);
+        n1.addEdge(input.charAt(idx), e);
+        n2.setParentEdge(e);
+        return e;
+    }
+
     private Node splitEdge(Edge e, int offset) {
         if (offset <= 0 || offset >= e.getLength()) throw new IllegalArgumentException("Can't split edge "+e.getLabel(input)+" at offset "+offset);
 
@@ -231,6 +222,7 @@ public class McCreight {
     /**
      * Private class to use as return value from fastscan.
      */
+    // TODO make fastscan use NodeAndOffset
     private class NodeAndNewFlag {
         public Node n;
         public boolean isNew;
