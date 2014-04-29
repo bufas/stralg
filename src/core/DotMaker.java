@@ -49,7 +49,7 @@ public class DotMaker implements Closeable {
     }
 
     private void printSubtreeEdges(Node n) {
-//        if (n.getSuffixLink() != null) out.println("\t\"_["+prefixIdx+"]_" + n.getLabel(input) + "\" -> \"_["+prefixIdx+"]_" + n.getSuffixLink().getLabel(input) + "\" [weight=0, color=\"blue\"]");
+//        if (n.getSuffixLink() != null) out.println("\t\"_["+prefixIdx+"]_" + n.getLabel(input) + "\" -> \"_["+prefixIdx+"]_" + n.getSuffixLink().getLabel(input) + "\" [weight=0, color=\"blue\", style=\"dotted\"]");
         for (Edge e : n.getAllEdges()) {
             out.println("\t\"_["+prefixIdx+"]_" + n.getLabel(input) + "\" -> \"_["+prefixIdx+"]_" + e.getTo().getLabel(input) + "\" [label=\" "+ e.getLabel(input) +"\"]");
             printSubtreeEdges(e.getTo());
