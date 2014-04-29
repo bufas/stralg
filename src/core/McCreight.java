@@ -206,6 +206,12 @@ public class McCreight {
 //        try { dot.close(); } catch (IOException e) {System.exit(-1);}
     }
 
+    /**
+     * Creates a new node at on a given edge at a given offset if the offset
+     * is not zero, as the node already exists in this case.
+     * @param nao a node and offset pair. The offset is on the parent edge.
+     * @return the newly created node, or the given node if none was created
+     */
     private Node createNodeIfNecessary(NodeAndOffset nao) {
         if (nao.offset == 0) return nao.node;
         else return splitEdge(nao.node.getParentEdge(), nao.offset);
