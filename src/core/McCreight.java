@@ -1,5 +1,6 @@
 package core;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,12 @@ public class McCreight {
         constructSuffixTree();
     }
 
+    /**
+     * Checks for two strings if one is a prefix of the other, or in
+     * case they are of equal length, if they are equal. The parameters
+     * are interchangeable.
+     * @return true if one string is a prefix of the other, false otherwise
+     */
     private boolean checkPrefixMatch(String s1, String s2) {
         for (int i= 0; i < Math.min(s1.length(), s2.length()); i++) {
             if (s1.charAt(i) != s2.charAt(i)) return false;
@@ -23,9 +30,11 @@ public class McCreight {
     }
 
     /**
-     * This is the same as slowscan, but it does not create a new node
-     * it just returns the next if it ends on an edge
-     * @return A node which matches the search, or null if the string is not in the tree
+     * Search character by character for a string starting at a given node.
+     * @param node the node in which we start the search
+     * @param find the string to search for
+     * @return if the search ends in a node, this is returned. If the search
+     * ends on an edge, the node it ends in is returned.
      */
     private Node slowscanNoCreate(Node node, String find) {
         int findCharCount = 0;
@@ -40,6 +49,11 @@ public class McCreight {
         return node;
     }
 
+    /**
+     * Builds a list of all leaves in the subtree of a given node.
+     * @param n the root of the subtree which we want to list
+     * @return a list of the leaves in the subtree rooted at the given node
+     */
     private List<Integer> listAllIndicesOfSubtree(Node n) {
         List<Integer> res = new ArrayList<Integer>();
 
@@ -57,6 +71,11 @@ public class McCreight {
         return res;
     }
 
+    /**
+     * Lists all occurrences of the query string in the original string.
+     * @param query the string to search for
+     * @return a list of all occurrences of the query string in the original string
+     */
     public List<Integer> search(String query) {
         // Serach as far down the tree as possible
         Node top = slowscanNoCreate(root, query);
@@ -68,17 +87,25 @@ public class McCreight {
         return listAllIndicesOfSubtree(top);
     }
 
+    /**
+     * Constructs the suffix tree.
+     */
     private void constructSuffixTree() {
+//        DotMaker dot = null;
+//        try { dot = new DotMaker(input); } catch (IOException e) { System.exit(-1); }
+
         // Construct T_1
         root = new Node(0, 0);
         Node n1 = new Node(0, input.length());
         makeEdge(root, n1, 0, input.length());
         root.setSuffixLink(root);
 
+
         // Construct T_{i+2}
         Node head   = root;
         String tail = input;
         for (int i = 0; i < input.length() - 1; i++) {
+//            dot.addTree(root);
 
             // Initialize u and v
             Node u   = root;
@@ -126,6 +153,9 @@ public class McCreight {
 
         // Set the last suffix link
         head.setSuffixLink(root);
+
+//        dot.addTree(root);
+//        try { dot.close(); } catch (IOException e) {System.exit(-1);}
     }
 
     private Node createNodeIfNecessary(NodeAndOffset nao) {
@@ -180,6 +210,14 @@ public class McCreight {
         }
     }
 
+    /**
+     * Creates an edge between two nodes
+     * @param n1 the parent node
+     * @param n2 the child node
+     * @param idx the starting index of the edge substring
+     * @param length the length of the edge substring
+     * @return the newly created edge
+     */
     private Edge makeEdge(Node n1, Node n2, int idx, int length) {
         Edge e = new Edge(n1, n2, idx, length);
         n1.addEdge(input.charAt(idx), e);
@@ -187,6 +225,12 @@ public class McCreight {
         return e;
     }
 
+    /**
+     * Splits an edge by creating a new node and inserting it on the edge.
+     * @param e the edge to split
+     * @param offset the offset from the parent node to split the edge
+     * @return the newly created node
+     */
     private Node splitEdge(Edge e, int offset) {
         if (offset <= 0 || offset >= e.getLength()) throw new IllegalArgumentException("Can't split edge "+e.getLabel(input)+" at offset "+offset);
 
