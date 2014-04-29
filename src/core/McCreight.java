@@ -166,13 +166,14 @@ public class McCreight {
              * more of the suffix is already present in the tree. Because we do not
              * know this for a fact, we will have to use slowscan starting at node w.
              * The string we are going to search for is tail, as s(u)v concatenated with
-             * tail is equal to the entire suffix we are trying to insert.
+             * tail is equal to the entire suffix we are trying to insert (unless head
+             * is the root (and v therefore is empty), we have to scan for the entire
+             * suffix that we want to insert. This is a special case as u and v act
+             * weird when head is the root).
              * This search can, again, either end in a node or on an edge. If it ends in
              * a node, this will be the new head, and nothing else happens. If it ends
              * on an edge, the edge is split by a new node, which will also be the new
              * head.
-             *
-             * TODO explain why we do not search for tail when v is the empty string
              */
             Node newHead;
             if (w.isNew) newHead = w.n;
