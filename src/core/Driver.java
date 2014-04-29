@@ -20,6 +20,7 @@ public class Driver {
         StringBuilder input = new StringBuilder();
         BufferedReader br = new BufferedReader(new FileReader(args[0]));
         int c;
+//        while ((c = br.read()) != -1) if (c != '\r' && c != '\n') input.append((char) c);
         while ((c = br.read()) != -1) input.append((char) c);
 
         // Build and search tree for the query string
