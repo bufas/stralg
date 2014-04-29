@@ -94,65 +94,112 @@ public class McCreight {
 //        DotMaker dot = null;
 //        try { dot = new DotMaker(input); } catch (IOException e) { System.exit(-1); }
 
-        // Construct T_1
+        /*
+         * First thing we need to do is to construct T_1. This is done by simply
+         * creating the root node, and an edge to a new leaf node representing the
+         * entire string.
+         */
         root = new Node(0, 0);
         Node n1 = new Node(0, input.length());
         makeEdge(root, n1, 0, input.length());
         root.setSuffixLink(root);
 
 
-        // Construct T_{i+2}
+        /*
+         * We will iteratively add smaller and smaller suffixes of the input string
+         * to the suffix tree. We start from input[1:n] and end with the empty string.
+         *
+         * Head represents the last node on the path to the most recently inserted
+         * string, and is therefore initialized to root.
+         *
+         * Tail is a string containing the label of the edge from head to newest leaf.
+         *
+         * This construction means that the concatenation of head and tail will spell
+         * out the most recently inserted suffix.
+         */
         Node head   = root;
         String tail = input;
         for (int i = 0; i < input.length() - 1; i++) {
 //            dot.addTree(root);
 
-            // Initialize u and v
-            Node u   = root;
-            String v = "";
+            /*
+             * We initialize the variables u and v. They are constructed in such a
+             * way that the suffix link of u concatenated with v is known to be in
+             * the tree. That is 'suffixLink(u).concat(v)' is in the tree.
+             *
+             * u is set to the parent of head, and in case head is the root, u is
+             * simply set to the root.
+             *
+             * v is the label of the edge going from u to head. Again, if head is
+             * the root, v is just the empty string.
+             */
+            Node u   = (head == root) ? root : head.getParent();
+            String v = (head == root) ? "" : head.getParentEdge().getLabel(input);
 
-            // Change u and v if head is not root
-            if (head != root) {
-                u = head.getParent();
-                v = head.getParentEdge().getLabel(input);
-            }
+            /*
+             * Because we know that the concatenation of s(u) and v is in the tree,
+             * we can use fastscan to search for v from node s(u). (where s(u) is the
+             * suffix link of u).
+             *
+             * If u is not the root, we can just to a regular fastscan for v from the
+             * node pointed to by the suffix link of u.
+             *
+             * If u is the root, we will fastscan from the root (which is also equal to
+             * s(u)) for v[1:]. Of course v can be the empty string (it is in the first
+             * iteration), we have to check for that too as we can't take the substring.
+             *
+             * We set w to to be the node where the search ends. If the search completes
+             * on an edge, a new node is created. We also need to store this information,
+             * which is why w is stored in a 'NodeAndNewFlag' variable.
+             */
+            NodeAndNewFlag w;
+            if (u != root) w = fastscan(u.getSuffixLink(), v);
+            else           w = (v.isEmpty()) ? new NodeAndNewFlag(u, false) : fastscan(root, v.substring(1));
 
-            Node w;
-            boolean wIsNew; // Tells whether w is a new node (created in this iteration) or not
-            if (u != root) {
-                NodeAndNewFlag nanf = fastscan(u.getSuffixLink(), v);
-                w = nanf.n;
-                wIsNew = nanf.isNew;
-            } else {
-                if (v.length() < 2) {
-                    w = u;
-                    wIsNew = false;
-                } else {
-                    NodeAndNewFlag nanf = fastscan(root, v.substring(1));
-                    w = nanf.n;
-                    wIsNew = nanf.isNew;
-                }
-            }
-
+            /*
+             * If w was just created, i.e. the search for s(u)v ended on an edge, we
+             * just have to add an edge with the rest of the suffix (i.e. tail) and
+             * we are done. Therefore we will just set newHead to w and proceed to adding
+             * tail.
+             *
+             * If, however, w was already a node in the tree, it can be the case that
+             * more of the suffix is already present in the tree. Because we do not
+             * know this for a fact, we will have to use slowscan starting at node w.
+             * The string we are going to search for is tail, as s(u)v concatenated with
+             * tail is equal to the entire suffix we are trying to insert.
+             * This search can, again, either end in a node or on an edge. If it ends in
+             * a node, this will be the new head, and nothing else happens. If it ends
+             * on an edge, the edge is split by a new node, which will also be the new
+             * head.
+             *
+             * TODO explain why we do not search for tail when v is the empty string
+             */
             Node newHead;
-            if (wIsNew) newHead = w;
-            else newHead = createNodeIfNecessary(slowscan(w, (v.isEmpty()) ? input.substring(i+1) : tail));
+            if (w.isNew) newHead = w.n;
+            else newHead = createNodeIfNecessary(slowscan(w.n, (v.isEmpty()) ? input.substring(i+1) : tail));
 
-            // Add suffix link to old head
-            head.setSuffixLink(w);
+            /*
+             * Now that we have found/created the node corresponding to s(u)v, we can
+             * update the suffix link of the old head to point to this node.
+             */
+            head.setSuffixLink(w.n);
 
-            // Add tail(i+1)
+            /*
+             * We now have to insert the leaf node corresponding to the suffix we are
+             * inserting. To connect it to the tree, we create an edge from newHead,
+             * and its label will be newTail (which is the rest of the suffix from
+             * newHead).
+             */
             String newTail = input.substring((i+1) + newHead.getLength(), input.length());
             Node terminalNode = new Node(i+1, input.length() - (i+1));
             makeEdge(newHead, terminalNode, (i+1) + newHead.getLength(), newTail.length());
 
-            // Update head
+            /*
+             * Finally we will update head and tail.
+             */
             head = newHead;
             tail = newTail;
         }
-
-        // Set the last suffix link
-        head.setSuffixLink(root);
 
 //        dot.addTree(root);
 //        try { dot.close(); } catch (IOException e) {System.exit(-1);}
