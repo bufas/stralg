@@ -35,6 +35,8 @@ public class Driver {
             System.out.print(" " + i);
         }
         System.out.println();
+
+        mc.findTandemRepeats();
     }
 
 }

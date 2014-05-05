@@ -33,15 +33,15 @@ public class DotMaker implements Closeable {
 
     private void printSubtreeNodes(Node n) {
         // Print a label (index i) on terminal nodes
-        String label = n.getLabel(input);
+        String label = n.getLabel();
         String shape = "ellipse";
 
         if (n.getAllEdges().isEmpty()) {
-            label = input.length() - n.getLabel(input).length() + 1 + "";
+            label = input.length() - n.getLabel().length() + 1 + "";
             shape = "ellipse";
         }
 
-        out.println("\t\"_["+prefixIdx+"]_" + n.getLabel(input) + "\" [label=\""+label+"\", shape=\""+shape+"\"]");
+        out.println("\t\"_["+prefixIdx+"]_" + n.getLabel() + "\" [label=\""+label+"\", shape=\""+shape+"\"]");
 
         for (Edge e : n.getAllEdges()) {
             printSubtreeNodes(e.getTo());
@@ -49,9 +49,9 @@ public class DotMaker implements Closeable {
     }
 
     private void printSubtreeEdges(Node n) {
-//        if (n.getSuffixLink() != null) out.println("\t\"_["+prefixIdx+"]_" + n.getLabel(input) + "\" -> \"_["+prefixIdx+"]_" + n.getSuffixLink().getLabel(input) + "\" [weight=0, color=\"blue\", style=\"dotted\"]");
+//        if (n.getSuffixLink() != null) out.println("\t\"_["+prefixIdx+"]_" + n.getLabel() + "\" -> \"_["+prefixIdx+"]_" + n.getSuffixLink().getLabel() + "\" [weight=0, color=\"blue\", style=\"dotted\"]");
         for (Edge e : n.getAllEdges()) {
-            out.println("\t\"_["+prefixIdx+"]_" + n.getLabel(input) + "\" -> \"_["+prefixIdx+"]_" + e.getTo().getLabel(input) + "\" [label=\" "+ e.getLabel(input) +"\"]");
+            out.println("\t\"_["+prefixIdx+"]_" + n.getLabel() + "\" -> \"_["+prefixIdx+"]_" + e.getTo().getLabel() + "\" [label=\" "+ e.getLabel() +"\"]");
             printSubtreeEdges(e.getTo());
         }
     }

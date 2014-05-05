@@ -16,6 +16,10 @@ public class McCreight {
         constructSuffixTree();
     }
 
+    public void findTandemRepeats() {
+        (new TandemRepeat()).printTandemRepeats(input, root);
+    }
+
     /**
      * Checks for two strings if one is a prefix of the other, or in
      * case they are of equal length, if they are equal. The parameters
@@ -41,7 +45,7 @@ public class McCreight {
 
         while (findCharCount < find.length()) {
             Edge e = node.getEdge(find.charAt(findCharCount));
-            if (e == null || !checkPrefixMatch(e.getLabel(input), find.substring(findCharCount))) return null;
+            if (e == null || !checkPrefixMatch(e.getLabel(), find.substring(findCharCount))) return null;
             findCharCount += e.getLength();
             node = e.getTo();
         }
@@ -99,8 +103,8 @@ public class McCreight {
          * creating the root node, and an edge to a new leaf node representing the
          * entire string.
          */
-        root = new Node(0, 0);
-        Node n1 = new Node(0, input.length());
+        root = new Node(input, 0, 0);
+        Node n1 = new Node(input, 0, input.length());
         makeEdge(root, n1, 0, input.length());
         root.setSuffixLink(root);
 
@@ -134,7 +138,7 @@ public class McCreight {
              * the root, v is just the empty string.
              */
             Node u   = (head == root) ? root : head.getParent();
-            String v = (head == root) ? "" : head.getParentEdge().getLabel(input);
+            String v = (head == root) ? "" : head.getParentEdge().getLabel();
 
             /*
              * Because we know that the concatenation of s(u) and v is in the tree,
@@ -192,7 +196,7 @@ public class McCreight {
              * newHead).
              */
             String newTail = input.substring((i+1) + newHead.getLength(), input.length());
-            Node terminalNode = new Node(i+1, input.length() - (i+1));
+            Node terminalNode = new Node(input, i+1, input.length() - (i+1));
             makeEdge(newHead, terminalNode, (i+1) + newHead.getLength(), newTail.length());
 
             /*
@@ -273,7 +277,7 @@ public class McCreight {
      * @return the newly created edge
      */
     private Edge makeEdge(Node n1, Node n2, int idx, int length) {
-        Edge e = new Edge(n1, n2, idx, length);
+        Edge e = new Edge(input, n1, n2, idx, length);
         n1.addEdge(input.charAt(idx), e);
         n2.setParentEdge(e);
         return e;
@@ -286,12 +290,12 @@ public class McCreight {
      * @return the newly created node
      */
     private Node splitEdge(Edge e, int offset) {
-        if (offset <= 0 || offset >= e.getLength()) throw new IllegalArgumentException("Can't split edge "+e.getLabel(input)+" at offset "+offset);
+        if (offset <= 0 || offset >= e.getLength()) throw new IllegalArgumentException("Can't split edge "+e.getLabel()+" at offset "+offset);
 
         // Prepare nodes
         Node n1 = e.getFrom();
         Node n3 = e.getTo();
-        Node n2 = new Node(e.getIdx() - n1.getLength(), n1.getLength() + offset);
+        Node n2 = new Node(input, e.getIdx() - n1.getLength(), n1.getLength() + offset);
 
         // Insert new edge between n2 and n3
         makeEdge(n2, n3, e.getIdx() + offset, e.getLength() - offset);
