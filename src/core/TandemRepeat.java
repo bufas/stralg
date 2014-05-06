@@ -94,6 +94,24 @@ public class TandemRepeat {
      * Find all branching tandem repeats in the given node. We iterate through each leaf "i" in
      * the subtree, and if leaf "i+depth" is also in the subtree, but in another child's subtree
      * than "i", we have found a tandem repeat.
+     *
+     * Case 1:
+     * +----------------+----------+----------+-------+
+     * |                |a ...     |a ...     |b      |
+     * +----------------+----------+----------+-------+
+     *  0     y          i          x          z      n
+     *
+     * Case 2:
+     * +-----+----------+----------+------------------+
+     * |     |a ...     |a ...     |b                 |
+     * +-----+----------+----------+------------------+
+     *  0     y          i          x          z      n
+     *
+     *  x = i + depth
+     *  y = i - depth
+     *  z = i + (2*depth)
+     *  n = input.length()
+     *
      * @param leafListPrime a list of all leaf indices in the subtree except for the largest child subtree
      * @param depth the depth of the node aka. the length of the label of the node
      * @param dfsSpanStart the start of the DFS numbering of the children
@@ -101,28 +119,22 @@ public class TandemRepeat {
      */
     private void processNode(List<Integer> leafListPrime, int depth, int dfsSpanStart, int dfsSpanEnd) {
         for (Integer i : leafListPrime) {
-            // Check if wer are out of bounds
-            if (i + depth < dfsNumbering.length && (i + (2 * depth)) < input.length()) {
+            int x = i + depth;
+            int y = i - depth;
+            int z = i + (2 * depth);
+            int n = input.length();
 
-                // Do checks from 2b page 8
-                int dfsNum = dfsNumbering[i + depth];
-                if ((dfsNum >= dfsSpanStart && dfsNum <= dfsSpanEnd) && input.charAt(i) != input.charAt(i + (2 * depth))) {
-                    // We found a branching repeat
-                    repeats.add(new Repeat(i, depth, true));
-                }
+            int xDFS = dfsNumbering[x];
+            int yDFS = dfsNumbering[y];
 
+            // Case 1
+            if (z < n && xDFS >= dfsSpanStart && xDFS <= dfsSpanEnd && input.charAt(i) != input.charAt(z)) {
+                repeats.add(new Repeat(i, depth, true));
             }
 
-            // Check if wer are out of bounds
-            if (i - depth >= 0 && (i - depth + (2 * depth)) < input.length()) {
-
-                // Do checks from 2c page 8
-                int dfsNum2 = dfsNumbering[i - depth];
-                if ((dfsNum2 >= dfsSpanStart && dfsNum2 <= dfsSpanEnd) && input.charAt(i - depth) != input.charAt(i - depth + (2 * depth))) {
-                    // We found a branching repeat
-                    repeats.add(new Repeat(i-depth, depth, true)); // TODO maybe dfsNum2 should be i instead
-                }
-
+            // Case 2
+            if (y >= 0 && x < n && yDFS >= dfsSpanStart && yDFS <= dfsSpanEnd && input.charAt(y) != input.charAt(x)) {
+                repeats.add(new Repeat(y, depth, true));
             }
         }
     }
