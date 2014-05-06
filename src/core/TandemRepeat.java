@@ -19,8 +19,13 @@ public class TandemRepeat {
     }
 
     public String toString() {
+        int branchingCount = 0;
         StringBuilder sb = new StringBuilder();
-        for (Repeat r : repeats) sb.append(r.toString()).append('\n');
+        for (Repeat r : repeats) {
+            sb.append(r.toString()).append('\n');
+            if (r.branching) branchingCount++;
+        }
+        sb.append(branchingCount).append(" ").append(repeats.size() - branchingCount).append('\n');
         return sb.toString();
     }
 
@@ -58,15 +63,29 @@ public class TandemRepeat {
 
         // Handle internal nodes
         int dfsSpanStart = curIdx;
-        List<Integer> leafList = new ArrayList<Integer>();
+        List<List<Integer>> subtreeLeafLists = new ArrayList<List<Integer>>();
+        int largestSubtree = -1;
         for (Edge e : n.getAllEdges()) {
             List<Integer> subtreeLeafList = traverse(e.getTo(), curIdx, depth + e.getLength());
-            leafList.addAll(subtreeLeafList);
+            subtreeLeafLists.add(subtreeLeafList);
             curIdx += subtreeLeafList.size();
+
+            // Keep track of the largest subtree
+            if (largestSubtree == -1 || subtreeLeafList.size() > subtreeLeafLists.get(largestSubtree).size()) {
+                largestSubtree = subtreeLeafLists.size() - 1;
+            }
         }
         int dfsSpanEnd = curIdx;
 
-        processNode(leafList, depth, dfsSpanStart, dfsSpanEnd);
+        // Build LL and LL'
+        List<Integer> leafList = new ArrayList<Integer>();
+        List<Integer> leafListPrime = new ArrayList<Integer>();
+        for (int i = 0; i < subtreeLeafLists.size(); i++) {
+            leafList.addAll(subtreeLeafLists.get(i));
+            if (i != largestSubtree) leafListPrime.addAll(subtreeLeafLists.get(i));
+        }
+
+        processNode(leafListPrime, depth, dfsSpanStart, dfsSpanEnd);
 
         return leafList;
     }
@@ -75,21 +94,35 @@ public class TandemRepeat {
      * Find all branching tandem repeats in the given node. We iterate through each leaf "i" in
      * the subtree, and if leaf "i+depth" is also in the subtree, but in another child's subtree
      * than "i", we have found a tandem repeat.
-     * @param leafList a list of all leaf indices in the subtree
+     * @param leafListPrime a list of all leaf indices in the subtree except for the largest child subtree
      * @param depth the depth of the node aka. the length of the label of the node
      * @param dfsSpanStart the start of the DFS numbering of the children
      * @param dfsSpanEnd the end of the DFS numbering of the children
      */
-    private void processNode(List<Integer> leafList, int depth, int dfsSpanStart, int dfsSpanEnd) {
-        for (Integer i : leafList) {
+    private void processNode(List<Integer> leafListPrime, int depth, int dfsSpanStart, int dfsSpanEnd) {
+        for (Integer i : leafListPrime) {
             // Check if wer are out of bounds
-            if (i + depth >= dfsNumbering.length || (i + (2 * depth)) >= input.length()) continue;
+            if (i + depth < dfsNumbering.length && (i + (2 * depth)) < input.length()) {
 
-            // Do checks from 2b page 6
-            int dfsNum = dfsNumbering[i + depth];
-            if ((dfsNum >= dfsSpanStart && dfsNum <= dfsSpanEnd) && input.charAt(i) != input.charAt(i + (2 * depth))) {
-                // We found a branching repeat
-                repeats.add(new Repeat(i, depth, true));
+                // Do checks from 2b page 8
+                int dfsNum = dfsNumbering[i + depth];
+                if ((dfsNum >= dfsSpanStart && dfsNum <= dfsSpanEnd) && input.charAt(i) != input.charAt(i + (2 * depth))) {
+                    // We found a branching repeat
+                    repeats.add(new Repeat(i, depth, true));
+                }
+
+            }
+
+            // Check if wer are out of bounds
+            if (i - depth >= 0 && (i - depth + (2 * depth)) < input.length()) {
+
+                // Do checks from 2c page 8
+                int dfsNum2 = dfsNumbering[i - depth];
+                if ((dfsNum2 >= dfsSpanStart && dfsNum2 <= dfsSpanEnd) && input.charAt(i - depth) != input.charAt(i - depth + (2 * depth))) {
+                    // We found a branching repeat
+                    repeats.add(new Repeat(i-depth, depth, true)); // TODO maybe dfsNum2 should be i instead
+                }
+
             }
         }
     }
