@@ -4,27 +4,16 @@ import java.util.*;
 
 public class TandemRepeat {
 
-    String input;         // The string the suffix tree contains
-    int[] dfsNumbering;   // A conversion array from leaf indices to their DFS numbers
-    Set<Repeat> repeats;  // Contains all tandem repeats found
+    String input;        // The string the suffix tree contains
+    int[] dfsNumbering;  // A conversion array from leaf indices to their DFS numbers
+    Set<Repeat> repeats; // Contains all tandem repeats found
 
     public TandemRepeat(String input, Node root) {
         this.input = input;
         this.repeats = new HashSet<Repeat>();
         dfsNumbering = new int[input.length()];
-        traverse(root, 1, 0);
-        findNonBranching();
-        checkAllRepeats();
-    }
-
-    private void checkAllRepeats() {
-        // Check if they are tandem repeats
-        for (Repeat r : repeats) {
-            if (!input.substring(r.idx, r.idx+r.len).equals(input.substring(r.idx+r.len, r.idx+r.len+r.len))) {
-                System.out.println(r + " is not a tandem repeat");
-                System.exit(-1);
-            }
-        }
+        findBranchingRepeats(root, 1, 0);
+        findNonBranchingRepeats();
     }
 
     public String toString() {
@@ -42,7 +31,7 @@ public class TandemRepeat {
      * Find all non-branching tandem repeats from the branching ones found by
      * left rotating them.
      */
-    private void findNonBranching() {
+    private void findNonBranchingRepeats() {
         List<Repeat> nonBranching = new ArrayList<Repeat>();
         for (Repeat r : repeats) {
             int curIdx = r.idx - 1;
@@ -62,7 +51,7 @@ public class TandemRepeat {
      * @param depth the depth of the node aka. the length of the label of the node
      * @return a list of leaf indices that is in the subtree of this node
      */
-    private List<Integer> traverse(Node n, int curIdx, int depth) {
+    private List<Integer> findBranchingRepeats(Node n, int curIdx, int depth) {
         // Handle leaves
         if (n.getAllEdges().isEmpty()) {
             int leafNumber = input.length() - n.getLabel().length();
@@ -75,7 +64,7 @@ public class TandemRepeat {
         List<List<Integer>> subtreeLeafLists = new ArrayList<List<Integer>>();
         int largestSubtree = -1;
         for (Edge e : n.getAllEdges()) {
-            List<Integer> subtreeLeafList = traverse(e.getTo(), curIdx, depth + e.getLength());
+            List<Integer> subtreeLeafList = findBranchingRepeats(e.getTo(), curIdx, depth + e.getLength());
             subtreeLeafLists.add(subtreeLeafList);
             curIdx += subtreeLeafList.size();
 
