@@ -1,21 +1,30 @@
 package core;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class TandemRepeat {
 
     String input;         // The string the suffix tree contains
     int[] dfsNumbering;   // A conversion array from leaf indices to their DFS numbers
-    List<Repeat> repeats; // Contains all tandem repeats found
+    Set<Repeat> repeats;  // Contains all tandem repeats found
 
     public TandemRepeat(String input, Node root) {
         this.input = input;
-        this.repeats = new ArrayList<Repeat>();
+        this.repeats = new HashSet<Repeat>();
         dfsNumbering = new int[input.length()];
         traverse(root, 1, 0);
         findNonBranching();
+        checkAllRepeats();
+    }
+
+    private void checkAllRepeats() {
+        // Check if they are tandem repeats
+        for (Repeat r : repeats) {
+            if (!input.substring(r.idx, r.idx+r.len).equals(input.substring(r.idx+r.len, r.idx+r.len+r.len))) {
+                System.out.println(r + " is not a tandem repeat");
+                System.exit(-1);
+            }
+        }
     }
 
     public String toString() {
@@ -37,7 +46,7 @@ public class TandemRepeat {
         List<Repeat> nonBranching = new ArrayList<Repeat>();
         for (Repeat r : repeats) {
             int curIdx = r.idx - 1;
-            while (input.charAt(curIdx) == input.charAt(curIdx + r.len)) {
+            while (curIdx >= 0 && input.charAt(curIdx) == input.charAt(curIdx + r.len)) {
                 nonBranching.add(new Repeat(curIdx, r.len, false));
                 curIdx--;
             }
@@ -77,7 +86,7 @@ public class TandemRepeat {
         }
         int dfsSpanEnd = curIdx;
 
-        // Build LL and LL'
+        // Build LL and LL' (the leaf list without the largest child subtree)
         List<Integer> leafList = new ArrayList<Integer>();
         List<Integer> leafListPrime = new ArrayList<Integer>();
         for (int i = 0; i < subtreeLeafLists.size(); i++) {
@@ -124,17 +133,20 @@ public class TandemRepeat {
             int z = i + (2 * depth);
             int n = input.length();
 
-            int xDFS = dfsNumbering[x];
-            int yDFS = dfsNumbering[y];
-
             // Case 1
-            if (z < n && xDFS >= dfsSpanStart && xDFS <= dfsSpanEnd && input.charAt(i) != input.charAt(z)) {
-                repeats.add(new Repeat(i, depth, true));
+            if (z < n) {
+                int xDFS = dfsNumbering[x];
+                if(xDFS >= dfsSpanStart && xDFS <= dfsSpanEnd && input.charAt(i) != input.charAt(z)) {
+                    repeats.add(new Repeat(i, depth, true));
+                }
             }
 
             // Case 2
-            if (y >= 0 && x < n && yDFS >= dfsSpanStart && yDFS <= dfsSpanEnd && input.charAt(y) != input.charAt(x)) {
-                repeats.add(new Repeat(y, depth, true));
+            if (y >= 0 && x < n) {
+                int yDFS = dfsNumbering[y];
+                if (yDFS >= dfsSpanStart && yDFS <= dfsSpanEnd && input.charAt(y) != input.charAt(x)) {
+                    repeats.add(new Repeat(y, depth, true));
+                }
             }
         }
     }
@@ -142,10 +154,26 @@ public class TandemRepeat {
     /**
      * A simple class to contain the information of a tandem repeat.
      */
-    private class Repeat {
+    private class Repeat implements Comparable<Repeat> {
         boolean branching;
         int idx, len;
         public Repeat(int i, int l, boolean b) { idx = i; len = l; branching = b; }
         public String toString() { return String.format("(%d,%d,2) %s", idx, len, (branching) ? "branching" : "non-branching"); }
+        public int hashCode() { return idx * 19 + len * 7; }
+
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null) return false;
+            if (!(obj instanceof Repeat)) return false;
+
+            Repeat r = (Repeat) obj;
+            return (idx == r.idx && len == r.len);
+        }
+
+        public int compareTo(Repeat r) {
+            if (idx > r.idx) return 1;
+            if (idx < r.idx) return -1;
+            return len - r.len;
+        }
     }
 }
