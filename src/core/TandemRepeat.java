@@ -54,7 +54,7 @@ public class TandemRepeat {
     private List<Integer> findBranchingRepeats(Node n, int curIdx, int depth) {
         // Handle leaves
         if (n.getAllEdges().isEmpty()) {
-            int leafNumber = input.length() - n.getLabel().length();
+            int leafNumber = n.leafIdx;
             dfsNumbering[leafNumber] = curIdx;
             return new ArrayList<Integer>(Arrays.asList(leafNumber));
         }

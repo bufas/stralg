@@ -10,8 +10,10 @@ public class McCreight {
 
     private String input;
     private Node root;
+    private int depthTrack;
 
     public McCreight(String input) {
+        this.depthTrack = 0;
         this.input = input + TERM_SYMBOL;
         constructSuffixTree();
     }
@@ -63,7 +65,7 @@ public class McCreight {
 
         // If node is a leaf, return its index
         if (n.getAllEdges().isEmpty()) {
-            res.add(n.getIdx() + 1);
+            res.add(n.leafIdx);
             return res;
         }
 
@@ -103,11 +105,10 @@ public class McCreight {
          * creating the root node, and an edge to a new leaf node representing the
          * entire string.
          */
-        root = new Node(input, 0, 0);
-        Node n1 = new Node(input, 0, input.length());
+        root = new Node();
+        Node n1 = new Node(1);
         makeEdge(root, n1, 0, input.length());
         root.setSuffixLink(root);
-
 
         /*
          * We will iteratively add smaller and smaller suffixes of the input string
@@ -137,8 +138,15 @@ public class McCreight {
              * v is the label of the edge going from u to head. Again, if head is
              * the root, v is just the empty string.
              */
-            Node u   = (head == root) ? root : head.getParent();
-            String v = (head == root) ? "" : head.getParentEdge().getLabel();
+            Node u; String v;
+            if (head == root) {
+                u = root;
+                v = "";
+            } else {
+                u = head.getParent();
+                v = head.getParentEdge().getLabel();
+                depthTrack -= head.getParentEdge().getLabel().length(); // We go to heads parent
+            }
 
             /*
              * Because we know that the concatenation of s(u) and v is in the tree,
@@ -157,8 +165,17 @@ public class McCreight {
              * which is why w is stored in a 'NodeAndNewFlag' variable.
              */
             NodeAndNewFlag w;
-            if (u != root) w = fastscan(u.getSuffixLink(), v);
-            else           w = (v.isEmpty()) ? new NodeAndNewFlag(u, false) : fastscan(root, v.substring(1));
+            if (u != root) {
+                depthTrack += v.length() - 1; // We go to the suffix link
+                w = fastscan(u.getSuffixLink(), v);
+            } else {
+                if (v.isEmpty()) {
+                    w = new NodeAndNewFlag(u, false);
+                } else {
+                    depthTrack += v.length() - 1;
+                    w = fastscan(root, v.substring(1));
+                }
+            }
 
             /*
              * If w was just created, i.e. the search for s(u)v ended on an edge, we
@@ -195,9 +212,9 @@ public class McCreight {
              * and its label will be newTail (which is the rest of the suffix from
              * newHead).
              */
-            String newTail = input.substring((i+1) + newHead.getLength(), input.length());
-            Node terminalNode = new Node(input, i+1, input.length() - (i+1));
-            makeEdge(newHead, terminalNode, (i+1) + newHead.getLength(), newTail.length());
+            String newTail = input.substring((i+1) + depthTrack, input.length());
+            Node terminalNode = new Node(i+2);
+            makeEdge(newHead, terminalNode, (i+1) + depthTrack, newTail.length());
 
             /*
              * Finally we will update head and tail.
@@ -263,6 +280,7 @@ public class McCreight {
                     return new NodeAndOffset(e.getTo(), i);
                 }
                 findCharCount++;
+                depthTrack++;
             }
             curNode = e.getTo();
         }
@@ -295,7 +313,7 @@ public class McCreight {
         // Prepare nodes
         Node n1 = e.getFrom();
         Node n3 = e.getTo();
-        Node n2 = new Node(input, e.getIdx() - n1.getLength(), n1.getLength() + offset);
+        Node n2 = new Node();
 
         // Insert new edge between n2 and n3
         makeEdge(n2, n3, e.getIdx() + offset, e.getLength() - offset);

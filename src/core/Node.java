@@ -6,21 +6,19 @@ import java.util.Map;
 
 public class Node {
 
-    private String str;
     private Map<Character, Edge> edges;
     private Edge parentEdge;
     private Node suffixLink;
-    private int idx;
-    private int length;
+    public int leafIdx;
 
-    public Node(String str, int idx, int length) {
-        if (idx < 0 || length < 0) throw new IllegalArgumentException("Attempt to create node with negative length (idx="+idx+" & length="+length+")");
+    public Node() {
+        this(-1);
+    }
 
-        this.str = str;
+    public Node(int leafIdx) {
         this.parentEdge = null;
-        this.idx = idx;
-        this.length = length;
         this.edges = new HashMap<Character, Edge>();
+        this.leafIdx = leafIdx;
     }
 
     public void addEdge(char first, Edge e) { edges.put(first, e); }
@@ -30,9 +28,6 @@ public class Node {
     public void setParentEdge(Edge e)       { parentEdge = e; }
     public Node getSuffixLink()             { return suffixLink; }
     public void setSuffixLink(Node n)       { suffixLink = n; }
-    public int getLength()                  { return length; }
-    public int getIdx()                     { return idx; }
     public Node getParent()                 { return parentEdge.getFrom(); }
-    public String getLabel()                { return str.substring(idx, idx + length); }
 
 }
