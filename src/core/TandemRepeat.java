@@ -13,18 +13,19 @@ public class TandemRepeat {
         this.repeats = new HashSet<Repeat>();
         dfsNumbering = new int[input.length()];
         findBranchingRepeats(root, 1, 0);
-        findNonBranchingRepeats();
+//        findNonBranchingRepeats();
     }
 
     public String toString() {
-        int branchingCount = 0;
-        StringBuilder sb = new StringBuilder();
-        for (Repeat r : repeats) {
-            sb.append(r.toString()).append('\n');
-            if (r.branching) branchingCount++;
-        }
-        sb.append(branchingCount).append(" ").append(repeats.size() - branchingCount).append('\n');
-        return sb.toString();
+        return repeats.size() + "";
+//        int branchingCount = 0;
+//        StringBuilder sb = new StringBuilder();
+//        for (Repeat r : repeats) {
+//            sb.append(r.toString()).append('\n');
+//            if (r.branching) branchingCount++;
+//        }
+//        sb.append(branchingCount).append(" ").append(repeats.size() - branchingCount).append('\n');
+//        return sb.toString();
     }
 
     /**
@@ -54,7 +55,7 @@ public class TandemRepeat {
     private List<Integer> findBranchingRepeats(Node n, int curIdx, int depth) {
         // Handle leaves
         if (n.getAllEdges().isEmpty()) {
-            int leafNumber = n.leafIdx;
+            int leafNumber = n.leafIdx - 1;
             dfsNumbering[leafNumber] = curIdx;
             return new ArrayList<Integer>(Arrays.asList(leafNumber));
         }

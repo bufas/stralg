@@ -8,11 +8,42 @@ import java.util.List;
 
 public class Driver {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
+        tandemRepeats(args);
+    }
+
+    private static void tandemRepeats(String[] args) throws IOException {
+//        // Print usage help
+//        if (args.length != 1) {
+//            System.out.println("Please call this program with a filename.");
+//            System.out.println("Ex. java core.Driver file.txt");
+//            return;
+//        }
+
+        // Read input file
+        System.out.println("# bytes\ttime\titerations");
+        for (int fille : new int[] {100, 500, 1000, 2000, 5000, 10000, 20000}) {
+            StringBuilder input = new StringBuilder();
+            BufferedReader br = new BufferedReader(new FileReader("testinput/lipsum"+fille+".txt"));
+            int c;
+            while ((c = br.read()) != -1) if (c != '\r' && c != '\n') input.append((char) c);
+
+            // Build and search tree for the query string
+            long start = System.currentTimeMillis();
+            for (int i = 0; i < 1000; i++) {
+                McCreight mc = new McCreight(input.toString());
+                mc.findTandemRepeats();
+            }
+            long end = System.currentTimeMillis();
+            System.out.format("%d\t%d\t%d\n", fille, (end - start), 1000);
+        }
+    }
+
+    private static void search(String[] args) throws IOException {
         // Print usage help
         if (args.length != 2) {
             System.out.println("Please call this program with a file and a search string.");
-            System.out.println("Ex. java core.McCreight.java file.txt xx");
+            System.out.println("Ex. java core.Driver file.txt xx");
             return;
         }
 
@@ -20,8 +51,7 @@ public class Driver {
         StringBuilder input = new StringBuilder();
         BufferedReader br = new BufferedReader(new FileReader(args[0]));
         int c;
-//        while ((c = br.read()) != -1) if (c != '\r' && c != '\n') input.append((char) c);
-        while ((c = br.read()) != -1) input.append((char) c);
+        while ((c = br.read()) != -1) if (c != '\r' && c != '\n') input.append((char) c);
 
         // Build and search tree for the query string
         McCreight mc = new McCreight(input.toString());
@@ -35,8 +65,6 @@ public class Driver {
             System.out.print(" " + i);
         }
         System.out.println();
-
-        mc.findTandemRepeats();
     }
 
 }
