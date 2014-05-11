@@ -52,20 +52,20 @@ public class TandemRepeat {
      * @param depth the depth of the node aka. the length of the label of the node
      * @return a list of leaf indices that is in the subtree of this node
      */
-    private List<Integer> findBranchingRepeats(Node n, int curIdx, int depth) {
+    private VeryList<Integer> findBranchingRepeats(Node n, int curIdx, int depth) {
         // Handle leaves
         if (n.getAllEdges().isEmpty()) {
             int leafNumber = n.leafIdx - 1;
             dfsNumbering[leafNumber] = curIdx;
-            return new ArrayList<Integer>(Arrays.asList(leafNumber));
+            return new VeryList<Integer>(leafNumber);
         }
 
         // Handle internal nodes
         int dfsSpanStart = curIdx;
-        List<List<Integer>> subtreeLeafLists = new ArrayList<List<Integer>>();
+        List<VeryList<Integer>> subtreeLeafLists = new ArrayList<VeryList<Integer>>();
         int largestSubtree = -1;
         for (Edge e : n.getAllEdges()) {
-            List<Integer> subtreeLeafList = findBranchingRepeats(e.getTo(), curIdx, depth + e.getLength());
+            VeryList<Integer> subtreeLeafList = findBranchingRepeats(e.getTo(), curIdx, depth + e.getLength());
             subtreeLeafLists.add(subtreeLeafList);
             curIdx += subtreeLeafList.size();
 
@@ -77,11 +77,11 @@ public class TandemRepeat {
         int dfsSpanEnd = curIdx;
 
         // Build LL and LL' (the leaf list without the largest child subtree)
-        List<Integer> leafList = new ArrayList<Integer>();
-        List<Integer> leafListPrime = new ArrayList<Integer>();
+        VeryList<Integer> leafList = new VeryList<Integer>();
+        VeryList<Integer> leafListPrime = new VeryList<Integer>();
         for (int i = 0; i < subtreeLeafLists.size(); i++) {
-            leafList.addAll(subtreeLeafLists.get(i));
-            if (i != largestSubtree) leafListPrime.addAll(subtreeLeafLists.get(i));
+            leafList.append(subtreeLeafLists.get(i));
+            if (i != largestSubtree) leafListPrime.append(subtreeLeafLists.get(i));
         }
 
         processNode(leafListPrime, depth, dfsSpanStart, dfsSpanEnd);
@@ -116,7 +116,7 @@ public class TandemRepeat {
      * @param dfsSpanStart the start of the DFS numbering of the children
      * @param dfsSpanEnd the end of the DFS numbering of the children
      */
-    private void processNode(List<Integer> leafListPrime, int depth, int dfsSpanStart, int dfsSpanEnd) {
+    private void processNode(VeryList<Integer> leafListPrime, int depth, int dfsSpanStart, int dfsSpanEnd) {
         for (Integer i : leafListPrime) {
             int x = i + depth;
             int y = i - depth;
@@ -164,6 +164,87 @@ public class TandemRepeat {
             if (idx > r.idx) return 1;
             if (idx < r.idx) return -1;
             return len - r.len;
+        }
+    }
+
+    private static class VeryList<E> implements Iterable<E> {
+        private Entry<E> first;
+        private Entry<E> last;
+
+        private int size;
+
+        public VeryList() {
+            first = null;
+            last  = null;
+            size  = 0;
+        }
+
+        public VeryList(E element) {
+            this();
+            add(element);
+        }
+
+        public void add(E element) {
+            Entry<E> entry = new Entry<E>(element);
+            if (first == null) {
+                first = last = entry;
+            } else {
+                last.next = entry;
+                last = entry;
+            }
+            size++;
+        }
+
+        public void append(VeryList<E> other) {
+            if (first == null) {
+                first = other.first;
+                last  = other.last;
+            } else {
+                last.next = other.first;
+                last = other.last;
+            }
+            size += other.size;
+        }
+
+        public int size() {
+            return size;
+        }
+
+        @Override
+        public Iterator<E> iterator() {
+            return new Iterator<E>() {
+                private Entry<E> current = null;
+
+                @Override
+                public boolean hasNext() {
+                    return first != null && (current == null || current.next != null);
+                }
+
+                @Override
+                public E next() {
+                    if (current == null) {
+                        current = first;
+                    } else {
+                        current = current.next;
+                    }
+                    return current.element;
+                }
+
+                @Override
+                public void remove() {
+                    throw new IllegalArgumentException("Ulovligheder!!");
+                }
+            };
+        }
+
+        private class Entry<E> {
+            private E element;
+            private Entry<E> next;
+
+            public Entry(E element) {
+                this.element = element;
+                this.next    = null;
+            }
         }
     }
 }
