@@ -19,8 +19,7 @@ public class McCreight {
     }
 
     public void findTandemRepeats() {
-        new TandemRepeat(input, root);
-//        System.out.println(new TandemRepeat(input, root));
+        System.out.println(new TandemRepeat(input, root));
     }
 
     /**
