@@ -20,23 +20,28 @@ public class Driver {
 //            return;
 //        }
 
+        final int repetitions = 100;
+
         // Read input file
         System.out.println("# bytes\ttime\titerations");
-        for (int fille : new int[] {5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 100000}) {
+        for (int fib = 0; fib < 40; fib++) {
             StringBuilder input = new StringBuilder();
-            BufferedReader br = new BufferedReader(new FileReader("testinput/lipsum"+fille+".txt"));
+            BufferedReader br = new BufferedReader(new FileReader("testinput/fib"+fib+".txt"));
             int c;
             while ((c = br.read()) != -1) if (c != '\r' && c != '\n') input.append((char) c);
 
             // Build and search tree for the query string
+//            long start = System.currentTimeMillis();
             long total = 0;
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < repetitions; i++) {
                 McCreight mc = new McCreight(input.toString());
                 long start = System.currentTimeMillis();
                 mc.findTandemRepeats();
-                total += System.currentTimeMillis() - start;
+                total += (System.currentTimeMillis() - start);
             }
-            System.out.format("%d\t%d\t%d\n", fille, total, 5);
+            System.out.format("%d\t%d\t%d\n", fib, total, repetitions);
+//            long end = System.currentTimeMillis();
+//            System.out.format("%d\t%d\t%d\n", fille, (end - start), 1000);
         }
     }
 
