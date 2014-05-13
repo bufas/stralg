@@ -13,19 +13,18 @@ public class TandemRepeat {
         this.repeats = new HashSet<Repeat>();
         dfsNumbering = new int[input.length()];
         findBranchingRepeats(root, 1, 0);
-//        findNonBranchingRepeats();
+        findNonBranchingRepeats();
     }
 
     public String toString() {
-        return repeats.size() + "";
-//        int branchingCount = 0;
-//        StringBuilder sb = new StringBuilder();
-//        for (Repeat r : repeats) {
-//            sb.append(r.toString()).append('\n');
-//            if (r.branching) branchingCount++;
-//        }
-//        sb.append(branchingCount).append(" ").append(repeats.size() - branchingCount).append('\n');
-//        return sb.toString();
+        int branchingCount = 0;
+        StringBuilder sb = new StringBuilder();
+        for (Repeat r : repeats) {
+            sb.append(r.toString()).append('\n');
+            if (r.branching) branchingCount++;
+        }
+        sb.append(branchingCount).append(" ").append(repeats.size() - branchingCount).append('\n');
+        return sb.toString();
     }
 
     /**
