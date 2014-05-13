@@ -24,7 +24,7 @@ public class Driver {
 
         // Read input file
         System.out.println("# bytes\ttime\titerations");
-        for (int fib = 0; fib < 40; fib++) {
+        for (int fib = 11; fib < 40; fib++) {
             StringBuilder input = new StringBuilder();
             BufferedReader br = new BufferedReader(new FileReader("testinput/fib"+fib+".txt"));
             int c;
@@ -35,14 +35,25 @@ public class Driver {
             long total = 0;
             for (int i = 0; i < repetitions; i++) {
                 McCreight mc = new McCreight(input.toString());
+                mc.findTandemRepeats();
+            }
+            for (int i = 0; i < repetitions; i++) {
+                McCreight mc = new McCreight(input.toString());
                 long start = System.currentTimeMillis();
                 mc.findTandemRepeats();
                 total += (System.currentTimeMillis() - start);
             }
-            System.out.format("%d\t%d\t%d\n", fib, total, repetitions);
+            System.out.format("%d\t%d\t%d\n", fib(fib), total, repetitions);
 //            long end = System.currentTimeMillis();
 //            System.out.format("%d\t%d\t%d\n", fille, (end - start), 1000);
         }
+    }
+
+    private static int fib(int n) {
+        if (n == 0 || n == 1) {
+            return 1;
+        }
+        return fib(n-1) + fib(n-2);
     }
 
     private static void search(String[] args) throws IOException {
