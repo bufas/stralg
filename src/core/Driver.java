@@ -9,7 +9,34 @@ import java.util.List;
 public class Driver {
 
     public static void main(String[] args) throws Exception {
-        tandemRepeats(args);
+//        tandemRepeats(args);
+        exactPatternMatch(args);
+    }
+
+    private static void exactPatternMatch(String[] args) throws IOException {
+        // Read input file
+        StringBuilder input = new StringBuilder();
+        BufferedReader br = new BufferedReader(new FileReader(args[0]));
+        int c;
+        while ((c = br.read()) != -1) if (c != '\r' && c != '\n') input.append((char) c);
+
+        // Build and search tree for the query string
+        McCreight mc = new McCreight(input.toString());
+        List<Integer> search = mc.search(args[1]);
+        Collections.sort(search);
+
+        // Print result
+        System.out.println();
+        System.out.print("The search returned:");
+        for (int i : search) {
+            System.out.print(" " + i);
+        }
+        System.out.println();
+
+
+        ExactMatch em = new ExactMatch(input.toString(), args[1]);
+        em.printSearch(em.searchNaive());
+        em.printSearch(em.searchBorderArray());
     }
 
     private static void tandemRepeats(String[] args) throws IOException {
