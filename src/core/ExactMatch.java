@@ -36,6 +36,35 @@ public class ExactMatch {
         return res;
     }
 
+    public List<Integer> searchKMP() {
+        List<Integer> res = new ArrayList<Integer>();
+
+        char[] t = input.toCharArray();
+        char[] p = pattern.toCharArray();
+
+        int n = input.length();
+        int m = pattern.length();
+        int[] pi = constructBorderArray(pattern);
+        int q = 0;
+
+        for (int i = 0; i < n; i++) {
+            while (q > 0 && p[q] != t[i]) {
+                q = pi[q - 1];
+            }
+
+            if (p[q] == t[i]) {
+                q = q + 1;
+            }
+
+            if (q == m) {
+                res.add(i - m + 2);
+                q = pi[q-1];
+            }
+        }
+
+        return res;
+    }
+
     private int[] constructBorderArray(String str) {
         char[] x = str.toCharArray();
         int[] border = new int[x.length];
